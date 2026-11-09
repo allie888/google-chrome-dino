@@ -8,12 +8,12 @@ const canvas_ctx = canvas.getContext('2d');
 const CELL_SIZE = 2;
 const ROWS = 300;
 let COLUMNS = 1000;
-const FLOOR_VELOCITY = new Velocity(0, -7);
+const FLOOR_VELOCITY = new Velocity(0, -6.3);
 let CACTUS_MIN_GAP = 20;
 
-if (screen.width < COLUMNS) {
-    COLUMNS = screen.width;
-    FLOOR_VELOCITY.add(new Velocity(0, 2));
+if (document.documentElement.clientWidth < COLUMNS) {
+    COLUMNS = document.documentElement.clientWidth;
+    FLOOR_VELOCITY.add(new Velocity(0, 1.4));
     CACTUS_MIN_GAP = 50;
 }
 
@@ -28,10 +28,11 @@ let is_jump_held = false;
 let jump_hold_frames_remaining = 0;
 let game_over = null;
 let is_first_time = true;
+let game_started_at = null;
 let game_score = null;
 let game_score_step = 0;
 let game_hi_score = null;
-let step_velocity = new Velocity(0, -0.1);
+let step_velocity = new Velocity(0, -0.091);
 let cumulative_velocity = null;
 let current_theme = null;
 let last_milestone = 0;
@@ -91,7 +92,7 @@ let harmful_character_allocator = [
 ]
 
 function handle_input_start() {
-    if (game_over && (Date.now() - game_over) > 1000) {
+    if (game_over) {
         main();
         return;
     }
@@ -137,12 +138,22 @@ function initialize() {
         if (e.pointerType !== 'touch') handle_input_end();
     };
 
-    document.body.onkeydown = event => {
-        if (event.key === ' ' && !event.repeat) handle_input_start();
+    document.onkeydown = event => {
+        if (event.code === 'Space') {
+            event.preventDefault();
+            if (!event.repeat) handle_input_start();
+        }
     };
-    document.body.onkeyup = event => {
-        if (event.key === ' ') handle_input_end();
+    document.onkeyup = event => {
+        if (event.code === 'Space') {
+            event.preventDefault();
+            handle_input_end();
+        }
     };
+    game_started_at = Date.now();
+    dino_ready_to_jump = true;
+    dino_current_thrust = new Velocity(0, 0);
+    game_score_step = 0;
 }
 
 function paint_layout(character_layout, character_position) {
@@ -160,6 +171,8 @@ function paint_layout(character_layout, character_position) {
 }
 
 function event_loop() {
+    const horizontal_speed_multiplier = Date.now() - game_started_at < 15000 ? 0.9 : 1;
+
     game_score_step += 0.15;
 
     if (game_score_step > 1) {
@@ -235,7 +248,7 @@ function event_loop() {
                 characters_pool[i].get_velocity().add(step_velocity);
             }
 
-            characters_pool[i].tick();
+            characters_pool[i].tick(horizontal_speed_multiplier);
             let CHARACTER_LAYOUT = characters_pool[i].get_layout();
 
             // A special case for dino jump. It's leg should be in standing position while jump

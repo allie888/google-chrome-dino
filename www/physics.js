@@ -40,8 +40,8 @@ export class Velocity {
     }
 }
 
-export function applyVelocityToPosition(position, velocity) {
-    return new Position(position._y_pos + velocity._y_speed, position._x_pos + velocity._x_speed);
+export function applyVelocityToPosition(position, velocity, horizontal_speed_multiplier = 1) {
+    return new Position(position._y_pos + velocity._y_speed, position._x_pos + velocity._x_speed * horizontal_speed_multiplier);
 }
 
 

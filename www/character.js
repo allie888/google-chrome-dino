@@ -25,12 +25,16 @@ export class Character {
         this._movement_delay_counter = 0;
     }
 
-    tick() {
+    tick(horizontal_speed_multiplier = 1) {
         this._movement_delay_counter++;
         if (this._movement_delay_counter > this._character_meta._movement_delay) {
             this._movement_delay_counter = 0;
             this._tick_counter += 1;
-            this.set_position(applyVelocityToPosition(this._character_meta._position, this._character_meta._velocity));
+            this.set_position(applyVelocityToPosition(
+                this._character_meta._position,
+                this._character_meta._velocity,
+                horizontal_speed_multiplier
+            ));
         }
     }
 
